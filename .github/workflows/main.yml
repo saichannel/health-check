@@ -1,4 +1,4 @@
-name: Deploy Mule App to CloudHub 2.0
+name: Build & Deploy Mule App to CloudHub 2.0
 
 on:
   workflow_dispatch:
@@ -9,8 +9,9 @@ on:
         default: "dev"
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
@@ -21,16 +22,25 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Build Mule Application
+      - name: Build Mule App
         run: mvn clean package -DmuleDeploy
 
+      - name: Publish to Exchange
+        run: |
+          mvn deploy \
+            -Dusername=${{ secrets.ANYPOINT_USERNAME }} \
+            -Dpassword=${{ secrets.ANYPOINT_PASSWORD }} \
+            -DorgId=${{ secrets.ANYPOINT_ORG_ID }} \
+            -DgroupId=${{ secrets.GROUP_ID }} \
+            -DassetVersion=${{ secrets.ASSET_VERSION }}
+
   deploy:
-    needs: build
+    needs: build-and-publish
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
 
     steps:
-      - name: Checkout Source
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Java 17
@@ -44,9 +54,10 @@ jobs:
           mvn deploy -DmuleDeploy \
             -Duser=${{ secrets.ANYPOINT_USERNAME }} \
             -Dpass=${{ secrets.ANYPOINT_PASSWORD }} \
+            -DorgId=${{ secrets.ANYPOINT_ORG_ID }} \
             -Denv=${{ github.event.inputs.environment }} \
-            -DappName=${{ secrets.APP_NAME }}
+            -DappName=${{ secrets.APP_NAME }} \
+            -DbusinessGroup=${{ secrets.ANYPOINT_BUSINESS_GROUP }}
 
-      - name: Debug Info
-        run: |
-          echo "Deploying to environment: ${{ github.event.inputs.environment }}"
+      - name: Confirm Environment
+        run: echo "Deployed to ${{ github.event.inputs.environment }}"
