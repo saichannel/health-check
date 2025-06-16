@@ -1,2 +1,9 @@
-eclipse.preferences.version=1
-encoding/<project>=UTF-8
+<settings>
+  <servers>
+    <server>
+      <id>anypoint-exchange</id>
+      <username>${env.USER}</username>
+      <password>${env.PASS}</password>
+    </server>
+  </servers>
+</settings>
