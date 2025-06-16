@@ -36,7 +36,7 @@
 					<cloudhub2Deployment>
 						<uri>https://anypoint.mulesoft.com</uri>
 						<provider>MC</provider>
-						<muleVersion>4.9.0</muleVersion>
+						<muleVersion>4.9.6</muleVersion>
 						<server>anypoint-exchange-v3</server>
 						<connectedAppClientId>${anypoint.username}</connectedAppClientId>
 						<connectedAppClientSecret>${anypoint.password}</connectedAppClientSecret>
