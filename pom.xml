@@ -6,7 +6,7 @@
 
 	<groupId>a62f6236-0b02-4e5f-a8eb-dc5e37aedb12</groupId>
 	<artifactId>health_check</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<packaging>mule-application</packaging>
 
 	<name>health_check</name>
@@ -47,6 +47,16 @@
 						<applicationName>${appname}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
+						<deploymentSettings>
+        						<http>
+            							<inbound>
+                							<publicUrl>https://deploy-cloudhub2.sirichat.com</publicUrl>
+            							</inbound>
+        						</http>
+        						<lastMileSecurity>false</lastMileSecurity>
+        						<forwardSslSession>false</forwardSslSession>
+        						<generateDefaultPublicUrl>false</generateDefaultPublicUrl>
+    						</deploymentSettings>
 						<properties>
 							<anypoint.platform.client_id>${anypoint.platform.client_id}</anypoint.platform.client_id>
 							<anypoint.platform.client_secret>${anypoint.platform.client_secret}</anypoint.platform.client_secret>
