@@ -2,6 +2,11 @@ name: Reusable Workflow To Deploy MuleSoft Application
  
 on:
   workflow_call:
+   inputs:
+    environment:
+    description: 'Deployment environment (dev, uat, prod)'
+    required: true
+    default: 'Dev'
 
 jobs:
   build:
