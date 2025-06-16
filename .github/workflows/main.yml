@@ -42,8 +42,8 @@ jobs:
       - name: Publish to Exchange
         run: |
           mvn deploy -DmuleDeploy \
-            -Dusername=${{ secrets.USER }} \
-            -Dpassword=${{ secrets.PASS }}
+            -Duser=${{ secrets.USER }} \
+            -Dpass=${{ secrets.PASS }}
 
       - name: Deploy to CloudHub 2.0
         run: |
