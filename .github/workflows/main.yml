@@ -43,7 +43,7 @@ jobs:
           java-version: 17
 
       - name: Deploy to CloudHub 2.0
-        run: mvn deploy -DmuleDeploy \
+        run: mvn clean deploy -DmuleDeploy \
             -Duser=${{ secrets.USER }} \
             -Dpass=${{ secrets.PASS }} \
             -DappName=${{ secrets.APP_NAME }} \
