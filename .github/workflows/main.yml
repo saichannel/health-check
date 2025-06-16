@@ -42,6 +42,7 @@ jobs:
       - name: Publish to Exchange
         run: |
           mvn deploy -DmuleDeploy \
+            -DappName="${{ secrets.APP_NAME }}" \
             -Duser=${{ secrets.USER }} \
             -Dpass=${{ secrets.PASS }}
 
