@@ -42,11 +42,15 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Deploy to CloudHub 2.0
+      - name: Deploy to CloudHub
         run: |
           mvn clean deploy -DmuleDeploy \
             -Duser=${{ secrets.USER }} \
             -Dpass=${{ secrets.PASS }} \
-            -DappName=${{ secrets.APP_NAME }} \
-            -Denv=${{ secrets.ENV }}
+            -Denv=${{ secrets.ENV }} \
+            -DappName=${{ secrets.APP_NAME }}
+      - name: Debug Secrets
+        run: echo "Deploying to ${{ secrets.ENV }}"
+
+
 
