@@ -1,12 +1,8 @@
 name: Reusable Workflow To Deploy MuleSoft Application
  
 on:
-  workflow_dispatch:
-   inputs:
-    environment:
-    description: 'Deployment environment (dev, uat, prod)'
-    required: true
-    default: 'Dev'
+ push:
+  branches: [ main ]
 
 jobs:
   build:
