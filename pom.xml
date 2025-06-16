@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.mycompany</groupId>
+	<groupId>a62f6236-0b02-4e5f-a8eb-dc5e37aedb12</groupId>
 	<artifactId>health_check</artifactId>
 	<version>1.0.0</version>
 	<packaging>mule-application</packaging>
@@ -36,14 +36,21 @@
 					<cloudhub2Deployment>
 						<uri>https://anypoint.mulesoft.com</uri>
 						<provider>MC</provider>
-						<environment>${env}</environment>
-						<target>Cloudhub-US-East-2</target>
-						<applicationName>${appName}</applicationName>
 						<muleVersion>4.9.0</muleVersion>
-						<username>${user}</username>
-						<password>${pass}</password>
+						<server>anypoint-exchange-v3</server>
+						<connectedAppClientId>${anypoint.username}</connectedAppClientId>
+						<connectedAppClientSecret>${anypoint.password}</connectedAppClientSecret>
+						<connectedAppGrantType>client_credentials</connectedAppGrantType>
+						<businessGroupId>${anypoint.businessGroup}</businessGroupId>
+						<environment>${env}</environment>
+						<target>DemoSpace</target>
+						<applicationName>${appname}</applicationName>
 						<replicas>1</replicas>
-						<vCores>1</vCores>
+						<vCores>0.1</vCores>
+						<properties>
+							<anypoint.platform.client_id>${anypoint.platform.client_id}</anypoint.platform.client_id>
+							<anypoint.platform.client_secret>${anypoint.platform.client_secret}</anypoint.platform.client_secret>
+						</properties>
 					</cloudhub2Deployment>
 				</configuration>
 			</plugin>
@@ -66,9 +73,9 @@
 	</dependencies>
 	<distributionManagement>
 		<repository>
-			<id>Repository</id>
+			<id>anypoint-exchange-v3</id>
 			<name>Corporate Repository</name>
-			<url>https://maven.anypoint.mulesoft.com/api/v3/organizations/8724f8e5-1e57-4b90-97eb-9eb4a3f0e4d0/maven</url>
+			<url>https://maven.anypoint.mulesoft.com/api/v3/organizations/${project.groupId}/maven</url>
 			<layout>default</layout>
 		</repository>
 	</distributionManagement>
@@ -96,7 +103,7 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-		</pluginRepository>
+		</pluginRepository>	
 	</pluginRepositories>
 
 </project>

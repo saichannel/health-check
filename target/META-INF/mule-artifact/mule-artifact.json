@@ -5,7 +5,7 @@
   "secureProperties": [],
   "supportedJavaVersions": [],
   "redeploymentEnabled": true,
-  "name": "com.mycompany:health_check:1.0.0",
+  "name": "a62f6236-0b02-4e5f-a8eb-dc5e37aedb12:health_check:1.0.0",
   "minMuleVersion": "4.9.0",
   "requiredProduct": "MULE",
   "classLoaderModelLoaderDescriptor": {
