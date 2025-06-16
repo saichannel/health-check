@@ -1,19 +1,18 @@
-name: Build & Deploy Mule App to CloudHub 2.0
+name: Build and Deploy Mule App to CloudHub2
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Target environment: dev / uat / prod"
+        description: 'Deployment environment (dev, uat, prod)'
         required: true
-        default: "dev"
+        default: 'Dev'
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Java 17
@@ -22,37 +21,34 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Set Environment Variables
-        id: set-env
-        run: |
-          echo "user=${{ secrets[format('USER.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "pass=${{ secrets[format('PASS.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "env=${{ secrets[format('ENV.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "app_name=${{ secrets[format('APP_NAME.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "group_id=${{ secrets[format('GROUP_ID.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "asset_version=${{ secrets[format('ASSET_VERSION.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-          echo "org_id=${{ secrets[format('ANYPOINT_ORG_ID.{0}', github.event.inputs.environment)] }}" >> $GITHUB_OUTPUT
-
-      - name: Build Mule App
+      - name: Build Mule app
         run: mvn clean package -DmuleDeploy
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
 
       - name: Publish to Exchange
         run: |
-          mvn deploy \
-            -Dusername=${{ steps.set-env.outputs.user }} \
-            -Dpassword=${{ steps.set-env.outputs.pass }} \
-            -DorgId=${{ steps.set-env.outputs.org_id }} \
-            -DgroupId=${{ steps.set-env.outputs.group_id }} \
-            -DassetVersion=${{ steps.set-env.outputs.asset_version }}
+          mvn deploy -DmuleDeploy \
+            -Dusername=${{ secrets.USER }} \
+            -Dpassword=${{ secrets.PASS }}
 
       - name: Deploy to CloudHub 2.0
         run: |
-          mvn deploy -DmuleDeploy \
-            -Duser=${{ steps.set-env.outputs.user }} \
-            -Dpass=${{ steps.set-env.outputs.pass }} \
-            -Denv=${{ steps.set-env.outputs.env }} \
-            -DappName=${{ steps.set-env.outputs.app_name }} \
-            -DorgId=${{ steps.set-env.outputs.org_id }}
-
-      - name: Confirm Deployment
-        run: echo "Deployment to ${{ github.event.inputs.environment }} completed."
+          mvn mule:deploy -DmuleDeploy \
+            -Duser=${{ secrets.USER }} \
+            -Dpass=${{ secrets.PASS }} \
+            -Denv=${{ secrets.ENV }} \
+            -DappName=${{ secrets.APP_NAME }}
