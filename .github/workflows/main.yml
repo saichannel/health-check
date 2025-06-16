@@ -25,7 +25,7 @@ jobs:
           java-version: 17
       - name: Publish to Exchange
         run: |
-          mvn deploy --settings .maven/settings.xml -DskipMunitTests \
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests \
           -Duser="${{ secrets.USER }}" \
           -Dpass="${{ secrets.PASS }}" 
 
