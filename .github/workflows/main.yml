@@ -48,7 +48,15 @@ jobs:
       - name: Deploy to CloudHub 2.0
         run: |
           mvn mule:deploy -DmuleDeploy \
-            -Duser=${{ secrets.USER }} \
-            -Dpass=${{ secrets.PASS }} \
-            -Denv=${{ secrets.ENV }} \
-            -DappName=${{ secrets.APP_NAME }}
+            -DappName="${{ secrets.APP_NAME }}" \
+            -Denv="${{ secrets.ENV }}" \
+            -Duser="${{ secrets.USER }}" \
+            -Dpass="${{ secrets.PASS }}"
+
+      - name: Debug Vars
+        run: |
+          echo "APP_NAME=${{ secrets.APP_NAME }}"
+          echo "ENV=${{ secrets.ENV }}"
+          echo "USER=${{ secrets.USER }}"
+
+
