@@ -1,0 +1,108 @@
+name: Multi-Env MuleSoft Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target Environment (uat/prod)"
+        required: true
+        type: choice
+        options:
+          - uat
+          - prod
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build Mule Application
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.5
+        with:
+          maven-version: '3.8.7'
+
+      - name: Build Application
+        run: mvn clean package
+
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    name: Deploy to DEV
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: dev
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java & Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+
+      - name: Deploy to CloudHub DEV
+        env:
+          USER: ${{ secrets.USER }}
+          PASS: ${{ secrets.PASS }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          ENV: ${{ secrets.ENV }}
+        run: mvn deploy -DmuleDeploy -Duser=$USER -Dpass=$PASS -DappName=$APP_NAME -Denv=$ENV
+
+  deploy-to-uat:
+    runs-on: ubuntu-latest
+    name: Deploy to UAT
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'uat'
+    environment:
+      name: uat
+      url: https://anypoint.mulesoft.com
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java & Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+
+      - name: Deploy to CloudHub UAT
+        env:
+          USER: ${{ secrets.USER }}
+          PASS: ${{ secrets.PASS }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          ENV: ${{ secrets.ENV }}
+        run: mvn deploy -DmuleDeploy -Duser=$USER -Dpass=$PASS -DappName=$APP_NAME -Denv=$ENV
+
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+    name: Deploy to PROD
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
+    environment:
+      name: prod
+      url: https://anypoint.mulesoft.com
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java & Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+
+      - name: Deploy to CloudHub PROD
+        env:
+          USER: ${{ secrets.USER }}
+          PASS: ${{ secrets.PASS }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          ENV: ${{ secrets.ENV }}
+        run: mvn deploy -DmuleDeploy -Duser=$USER -Dpass=$PASS -DappName=$APP_NAME -Denv=$ENV
