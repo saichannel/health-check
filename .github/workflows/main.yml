@@ -2,7 +2,7 @@ name: Reusable Workflow To Deploy MuleSoft Application
  
 on:
  push:
-  branches: [ mai ]
+  branches: [ main ]
 
 jobs:
   build:
