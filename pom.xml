@@ -38,7 +38,7 @@
 						<provider>MC</provider>
 						<environment>${env}</environment>
 						<target>Cloudhub-US-East-2</target>
-						<muleVersion>4.3.0</muleVersion>
+						<muleVersion>4.9.0</muleVersion>
 						<username>${user}</username>
 						<password>${pass}</password>
 						<applicationName>${appName}</applicationName>
