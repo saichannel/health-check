@@ -3,7 +3,7 @@
      <server>
       <id>anypoint-exchange-v3</id> <!-- make sure this matches the serverId property in pom.xml -->
       <username>~~~Client~~~</username>
-      <password>${secrets.USER}~?~${secrets.PASS}</password> <!-- these come from the build.yml and your github secrets -->
+      <password>${anypoint.username}~?~${anypoint.password}</password> <!-- these come from the build.yml and your github secrets -->
     </server>
   </servers>
 </settings>
