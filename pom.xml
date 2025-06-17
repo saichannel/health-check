@@ -17,7 +17,7 @@
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
 		<app.runtime>4.9.6</app.runtime>
-		<mule.maven.plugin.version>4.5.1</mule.maven.plugin.version>
+		<mule.maven.plugin.version>4.3.0</mule.maven.plugin.version>
 	</properties>
 
 	<build>
@@ -45,7 +45,6 @@
 						<environment>${env}</environment>
 						<target>DemoSpace</target>
 						<applicationName>${appname}</applicationName>
-						<redeploy>true</redeploy>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
 						<deploymentSettings>
@@ -97,16 +96,10 @@
 			<url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
 			<layout>default</layout>
 		</repository>
-<!-- 		<repository>
-			<id>mulesoft-releases</id>
-			<name>MuleSoft Releases Repository</name>
-			<url>https://repository.mulesoft.org/releases/</url>
-			<layout>default</layout>
-		</repository> -->
 		<repository>
 			<id>mulesoft-releases</id>
 			<name>MuleSoft Releases Repository</name>
-			<url>https://repository.mulesoft.org/nexus/content/repositories/releases/</url>
+			<url>https://repository.mulesoft.org/releases/</url>
 			<layout>default</layout>
 		</repository>
 	</repositories>
