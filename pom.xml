@@ -44,7 +44,7 @@
 						<businessGroupId>${anypoint.businessGroup}</businessGroupId>
 						<environment>${env}</environment>
 						<target>DemoSpace</target>
-						<redeploy>true</redeploy>
+						<overwrite>true</overwrite>
 						<applicationName>${appname}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
