@@ -17,7 +17,7 @@
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
 		<app.runtime>4.9.6</app.runtime>
-		<mule.maven.plugin.version>4.3.0</mule.maven.plugin.version>
+		<mule.maven.plugin.version>4.7.1</mule.maven.plugin.version>
 	</properties>
 
 	<build>
@@ -44,8 +44,8 @@
 						<businessGroupId>${anypoint.businessGroup}</businessGroupId>
 						<environment>${env}</environment>
 						<target>DemoSpace</target>
-						<overwrite>true</overwrite>
 						<applicationName>${appname}</applicationName>
+						<redeploy>true</redeploy>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
 						<deploymentSettings>
