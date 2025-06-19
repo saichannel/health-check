@@ -47,8 +47,6 @@
 						<applicationName>${appname}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
-						<redeploy>true</redeploy>
-						<overwrite>true</overwrite>
 						<deploymentSettings>
         						<http>
             							<inbound>
