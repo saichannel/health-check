@@ -43,7 +43,7 @@
 						<connectedAppGrantType>client_credentials</connectedAppGrantType>
 						<businessGroupId>${anypoint.businessGroup}</businessGroupId>
 						<environment>${env}</environment>
-						<target>DemoSpace</target>
+						<target>indy-space</target>
 						<applicationName>${appname}</applicationName>
 						<replicas>1</replicas>
 						<vCores>0.1</vCores>
