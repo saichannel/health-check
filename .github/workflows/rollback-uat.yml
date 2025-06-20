@@ -3,8 +3,8 @@ name: Manual Rollback to UAT
 on:
   workflow_dispatch:
     inputs:
-      run_id:
-        description: 'GitHub Run ID of successful UAT deployment'
+      version:
+        description: 'Rollback version (e.g., 1.2.3)'
         required: true
       confirm_rollback:
         description: 'Type "yes" to confirm rollback'
@@ -18,32 +18,29 @@ jobs:
     environment: uat
 
     steps:
-      - name: Checkout repository
+      - name: Checkout rollback artifact branch
         uses: actions/checkout@v4
-
-      - name: Download rollback artifact from specific run
-        uses: actions/download-artifact@v4
         with:
-          name: rollback-uat-${{ github.event.inputs.run_id }}
-          path: rollback-uat/
+          ref: rollback-artifacts
 
-      - name: Extract version from info file
-        id: extract_version
+      - name: List rollback files
+        run: ls -R rollback-jars/
+
+      - name: Copy rollback JAR to target directory
         run: |
-          VERSION=$(cat rollback-uat/*/info.txt | cut -d'=' -f2)
-          echo "Rollback version: $VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION="${{ github.event.inputs.version }}"
+          mkdir -p target/
+          cp rollback-jars/$VERSION/*.jar target/
 
       - name: Redeploy rollback JAR to UAT
         run: |
-          JAR_FILE=$(find rollback-uat -name "*.jar" | head -n 1)
-          cp "$JAR_FILE" target/
+          VERSION="${{ github.event.inputs.version }}"
           mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
             -Danypoint.username="${{ secrets.USER }}" \
             -Danypoint.password="${{ secrets.PASS }}" \
             -Danypoint.businessGroup="${{ secrets.ANYPOINT_ORG_ID }}" \
             -Denv="${{ secrets.ENV }}" \
             -Dappname="${{ secrets.APP_NAME }}" \
-            -Dversion="${{ steps.extract_version.outputs.version }}" \
+            -Dversion="$VERSION" \
             -Danypoint.platform.client_id="${{ secrets.ENV_CLIENT_ID }}" \
             -Danypoint.platform.client_secret="${{ secrets.ENV_CLIENT_SECRET }}"
