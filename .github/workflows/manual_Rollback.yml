@@ -1,1 +1,115 @@
+name: Manual Rollback Workflow
 
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment for rollback'
+        required: true
+        type: choice
+        options:
+          - uat
+          - prod
+        default: uat
+      rollback_version:
+        description: 'Version to rollback to (e.g., 1.0.5)'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+jobs:
+  validate-rollback:
+    runs-on: ubuntu-latest
+    outputs:
+      is_valid: ${{ steps.validate.outputs.is_valid }}
+      available_versions: ${{ steps.validate.outputs.available_versions }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get deployment history
+        run: |
+          # Try to checkout deployment history branch
+          git checkout deployment-history 2>/dev/null || {
+            echo "Deployment history branch not found"
+            exit 1
+          }
+          
+          if [ ! -f deployment-history.json ]; then
+            echo "Deployment history file not found"
+            exit 1
+          fi
+
+      - name: Validate rollback version
+        id: validate
+        run: |
+          ROLLBACK_VERSION="${{ github.event.inputs.rollback_version }}"
+          TARGET_ENV="${{ github.event.inputs.environment }}"
+          
+          echo "Validating rollback to version: $ROLLBACK_VERSION in environment: $TARGET_ENV"
+          
+          # Check if the version exists in successful deployments for the target environment
+          if jq -e ".[] | select(.version == \"$ROLLBACK_VERSION\" and .environment == \"$TARGET_ENV\" and .status == \"success\")" deployment-history.json > /dev/null; then
+            echo "Version $ROLLBACK_VERSION found in successful $TARGET_ENV deployments"
+            echo "is_valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $ROLLBACK_VERSION not found in successful $TARGET_ENV deployments"
+            echo "is_valid=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # Get available versions for rollback
+          AVAILABLE_VERSIONS=$(jq -r ".[] | select(.environment == \"$TARGET_ENV\" and .status == \"success\") | .version" deployment-history.json | sort -V | tail -10 | tr '\n' ' ')
+          echo "available_versions=$AVAILABLE_VERSIONS" >> $GITHUB_OUTPUT
+          echo "Available versions for rollback: $AVAILABLE_VERSIONS"
+
+      - name: Display validation results
+        run: |
+          echo "## Rollback Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target Environment**: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Requested Version**: ${{ github.event.inputs.rollback_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason**: ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.validate.outputs.is_valid }}" == "true" ]; then
+            echo "**Validation Status**: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The rollback can proceed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Validation Status**: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Available versions for rollback:**" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.validate.outputs.available_versions }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  execute-rollback:
+    needs: validate-rollback
+    if: needs.validate-rollback.outputs.is_valid == 'true'
+    uses: ./.github/workflows/mulesoft-deployment.yml
+    with:
+      rollback_version: ${{ github.event.inputs.rollback_version }}
+      target_environment: ${{ github.event.inputs.environment }}
+    secrets: inherit
+
+  rollback-failed:
+    needs: validate-rollback
+    if: needs.validate-rollback.outputs.is_valid == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback validation failed
+        run: |
+          echo "Rollback validation failed"
+          echo "Version ${{ github.event.inputs.rollback_version }} is not available for rollback in ${{ github.event.inputs.environment }}"
+          echo "Available versions: ${{ needs.validate-rollback.outputs.available_versions }}"
+          exit 1
