@@ -3,65 +3,47 @@ name: Manual Rollback to UAT
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to rollback to (check deployment-history artifact)'
+      run_id:
+        description: 'GitHub Run ID of successful UAT deployment'
         required: true
-      confirm:
-        description: 'Type "confirm" to execute rollback'
+      confirm_rollback:
+        description: 'Type "yes" to confirm rollback'
         required: true
+        default: 'no'
 
 jobs:
   rollback-uat:
-    if: github.event.inputs.confirm == 'confirm'
+    if: ${{ github.event.inputs.confirm_rollback == 'yes' }}
     runs-on: ubuntu-latest
     environment: uat
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download deployment history
+      - name: Download rollback artifact from specific run
         uses: actions/download-artifact@v4
         with:
-          name: deployment-history
-          path: .
+          name: rollback-uat-${{ github.event.inputs.run_id }}
+          path: rollback-uat/
 
-      - name: Validate version
-        id: validate_version
+      - name: Extract version from info file
+        id: extract_version
         run: |
-          if ! grep -q "${{ github.event.inputs.version }}" deployment-history.csv; then
-            echo "::error::Invalid version! Available versions:"
-            cat deployment-history.csv
-            exit 1
-          fi
-          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          VERSION=$(cat rollback-uat/*/info.txt | cut -d'=' -f2)
+          echo "Rollback version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Download rollback artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: rollback-${{ steps.validate_version.outputs.version }}
-          path: target/
-
-      - name: Deploy rollback version
+      - name: Redeploy rollback JAR to UAT
         run: |
-          mvn deploy --settings .settings/org.eclipse.core.resources.prefs \
-            -DskipMunitTests -DmuleDeploy \
+          JAR_FILE=$(find rollback-uat -name "*.jar" | head -n 1)
+          cp "$JAR_FILE" target/
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
             -Danypoint.username="${{ secrets.USER }}" \
             -Danypoint.password="${{ secrets.PASS }}" \
             -Danypoint.businessGroup="${{ secrets.ANYPOINT_ORG_ID }}" \
             -Denv="${{ secrets.ENV }}" \
             -Dappname="${{ secrets.APP_NAME }}" \
-            -Dversion="${{ steps.validate_version.outputs.version }}" \
+            -Dversion="${{ steps.extract_version.outputs.version }}" \
             -Danypoint.platform.client_id="${{ secrets.ENV_CLIENT_ID }}" \
             -Danypoint.platform.client_secret="${{ secrets.ENV_CLIENT_SECRET }}"
-
-      - name: Update deployment history
-        run: |
-          echo "$(date +%s),${{ steps.validate_version.outputs.version }}" >> deployment-history.csv
-          echo "Rollback to ${{ steps.validate_version.outputs.version }} successful!"
-
-      - name: Save updated history
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployment-history
-          path: deployment-history.csv
-          retention-days: 90
