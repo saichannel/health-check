@@ -96,7 +96,7 @@ jobs:
   execute-rollback:
     needs: validate-rollback
     if: needs.validate-rollback.outputs.is_valid == 'true'
-    uses: ./.github/workflows/mulesoft-deployment.yml
+    uses: ./.github/workflows/main.yml
     with:
       rollback_version: ${{ github.event.inputs.rollback_version }}
       target_environment: ${{ github.event.inputs.environment }}
