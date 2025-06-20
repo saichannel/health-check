@@ -18,13 +18,10 @@ jobs:
     environment: uat
 
     steps:
-      - name: Checkout rollback artifact branch
+      - name: Checkout rollback-artifacts branch
         uses: actions/checkout@v4
         with:
           ref: rollback-artifacts
-
-      - name: List rollback files
-        run: ls -R rollback-jars/
 
       - name: Copy rollback JAR to target directory
         run: |
