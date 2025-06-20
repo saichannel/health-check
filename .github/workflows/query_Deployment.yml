@@ -1,1 +1,123 @@
 
+name: Query Deployment History
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to query (leave empty for all)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - dev
+          - uat
+          - prod
+        default: ''
+      limit:
+        description: 'Number of recent deployments to show'
+        required: false
+        type: string
+        default: '10'
+
+jobs:
+  query-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get deployment history
+        run: |
+          # Try to checkout deployment history branch
+          git checkout deployment-history 2>/dev/null || {
+            echo "No deployment history found"
+            echo "## Deployment History" >> $GITHUB_STEP_SUMMARY
+            echo "No deployment history available." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          }
+          
+          if [ ! -f deployment-history.json ]; then
+            echo "Deployment history file not found"
+            echo "## Deployment History" >> $GITHUB_STEP_SUMMARY
+            echo "No deployment history file found." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+      - name: Query and display history
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          
+          echo "## Deployment History" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -n "$ENVIRONMENT" ]; then
+            echo "**Environment Filter**: $ENVIRONMENT" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Environment Filter**: All environments" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "**Showing**: Last $LIMIT deployments" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Build jq filter based on environment
+          if [ -n "$ENVIRONMENT" ]; then
+            JQ_FILTER=".[] | select(.environment == \"$ENVIRONMENT\")"
+          else
+            JQ_FILTER=".[]"
+          fi
+          
+          # Query and format results
+          echo "| Timestamp | Version | Environment | Status | Actor | Deployment Type |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|-------------|--------|-------|-----------------|" >> $GITHUB_STEP_SUMMARY
+          
+          jq -r "$JQ_FILTER" deployment-history.json | \
+          jq -s 'sort_by(.timestamp) | reverse' | \
+          jq -r ".[:$LIMIT][] | \"| \(.timestamp) | \(.version) | \(.environment) | \(.status) | \(.actor) | \(.deployment_type // \"deployment\") |\"" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show rollback candidates for each environment
+          echo "## Available Rollback Versions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          for env in dev uat prod; do
+            VERSIONS=$(jq -r ".[] | select(.environment == \"$env\" and .status == \"success\") | .version" deployment-history.json 2>/dev/null | sort -V | tail -5 | tr '\n' ' ' || echo "None")
+            if [ "$VERSIONS" != "None" ] && [ -n "$VERSIONS" ]; then
+              echo "**$env**: $VERSIONS" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Create deployment report
+        run: |
+          # Create a detailed JSON report
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          
+          if [ -n "$ENVIRONMENT" ]; then
+            JQ_FILTER=".[] | select(.environment == \"$ENVIRONMENT\")"
+          else
+            JQ_FILTER=".[]"
+          fi
+          
+          echo "Creating deployment report..."
+          jq "$JQ_FILTER" deployment-history.json | \
+          jq -s "sort_by(.timestamp) | reverse | .[:$LIMIT]" > deployment-report.json
+          
+          echo "Report created with $(jq length deployment-report.json) deployments"
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report-${{ github.run_id }}
+          path: deployment-report.json
+          retention-days: 7
