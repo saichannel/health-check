@@ -21,6 +21,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: List available artifacts
+        run: |
+          echo "Listing artifacts for run ID: ${{ github.event.inputs.run_id }}"
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }}/artifacts"
+
       - name: Download rollback artifact
         uses: actions/download-artifact@v4
         with:
