@@ -30,7 +30,7 @@ jobs:
       - name: Download rollback artifact
         uses: actions/download-artifact@v4
         with:
-          name: rollback-uat-${{ github.event.inputs.run_id }}  # Ensure this matches the artifact name
+          name: ${{ github.event.inputs.run_id }}  # Ensure this matches the artifact name
           path: rollback-uat/
 
       - name: Verify downloaded files
