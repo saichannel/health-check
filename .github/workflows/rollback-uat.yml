@@ -21,23 +21,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download rollback artifact from specific run
+      - name: Download rollback artifact
         uses: actions/download-artifact@v4
         with:
           name: rollback-uat-${{ github.event.inputs.run_id }}
           path: rollback-uat/
 
-      - name: Extract version from info file
+      - name: Verify downloaded files
+        run: |
+          ls -la rollback-uat/
+          cat rollback-uat/version.txt
+          cat rollback-uat/run_id.txt
+
+      - name: Prepare target directory
+        run: |
+          mkdir -p target
+          cp rollback-uat/*.jar target/
+
+      - name: Extract version
         id: extract_version
         run: |
-          VERSION=$(cat rollback-uat/*/info.txt | cut -d'=' -f2)
-          echo "Rollback version: $VERSION"
+          VERSION=$(cat rollback-uat/version.txt)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Rollback version: $VERSION"
 
-      - name: Redeploy rollback JAR to UAT
+      - name: Redeploy to UAT
         run: |
-          JAR_FILE=$(find rollback-uat -name "*.jar" | head -n 1)
-          cp "$JAR_FILE" target/
           mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
             -Danypoint.username="${{ secrets.USER }}" \
             -Danypoint.password="${{ secrets.PASS }}" \
