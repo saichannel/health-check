@@ -62,3 +62,10 @@ jobs:
             -Dversion="${{ steps.extract_version.outputs.version }}" \
             -Danypoint.platform.client_id="${{ secrets.ENV_CLIENT_ID }}" \
             -Danypoint.platform.client_secret="${{ secrets.ENV_CLIENT_SECRET }}"
+
+
+      - name: List available artifacts
+        run: |
+          echo "Listing artifacts for run ID: ${{ github.event.inputs.run_id }}"
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.inputs.run_id }}/artifacts"
