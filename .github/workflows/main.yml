@@ -29,7 +29,7 @@ jobs:
 
       - name: Publish to Exchange
         run: |
-          mvn deploy --settings .maven/settings.xml -DskipMunitTests \
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests \
           -Danypoint.username="${{ secrets.USER }}" \
           -Danypoint.password="${{ secrets.PASS }}" 
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Deploy to dev
         run: |
-          mvn deploy --settings .maven/settings.xml -DskipMunitTests -DmuleDeploy \
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
           -Danypoint.username="${{ secrets.USER }}" \
           -Danypoint.password="${{ secrets.PASS }}" \
           -Danypoint.businessGroup="${{ secrets.ANYPOINT_ORG_ID }}" \
@@ -82,7 +82,7 @@ jobs:
 
       - name: Deploy to uat
         run: |
-          mvn deploy --settings .maven/settings.xml -DskipMunitTests -DmuleDeploy \
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
           -Danypoint.username="${{ secrets.USER }}" \
           -Danypoint.password="${{ secrets.PASS }}" \
           -Danypoint.businessGroup="${{ secrets.ANYPOINT_ORG_ID }}" \
@@ -116,7 +116,7 @@ jobs:
 
       - name: Deploy to prod
         run: |
-          mvn deploy --settings .maven/settings.xml -DskipMunitTests -DmuleDeploy \
+          mvn deploy --settings .settings/org.eclipse.core.resources.prefs -DskipMunitTests -DmuleDeploy \
           -Danypoint.username="${{ secrets.USER }}" \
           -Danypoint.password="${{ secrets.PASS }}" \
           -Danypoint.businessGroup="${{ secrets.ANYPOINT_ORG_ID }}" \
